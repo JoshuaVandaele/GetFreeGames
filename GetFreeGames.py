@@ -7,11 +7,17 @@ import json
 from os import path
 from os import remove
 
+###### VARIABLES ######
+
 IPC = "127.0.0.1:1242" #IP of your IPC (default: 127.0.0.1:1242)
 saveprogress=True
+claimonfind=True
 
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
 configfile = "progress.json"
+
+
+###### FUNCTIONS ######
 
 def log(x):
   print('[' + str(datetime.now()) + "] - "+x)
@@ -20,12 +26,17 @@ def redeem(key):
   r = requests.post("http://"+IPC+"/Api/Command" , json=({"Command":"addlicense ASF "+str(key)})) #Send the games to ASF
   log(json.loads(r.text)["Result"])
 
+###### START UP ######
+
 if saveprogress: #If the file doesn't exist yet, create it
   if not path.exists(configfile):
     with open(configfile, "w") as f:
       json.dump({"stopped_at":0, "found": []}, f) #create save file
 
 print("Sit back and enjoy while we collect games for you.")
+
+###### LOOP ######
+
 while True:
   new = requests.get("http://api.steampowered.com/ISteamApps/GetAppList/v0002/",headers=headers).text #Request list of all games and their IDs
   apps = json.loads(new)["applist"]["apps"] 
@@ -41,10 +52,13 @@ while True:
     with open(configfile,"r") as f: #Take back where we left
       content = json.loads(f.read())
       i = content["stopped_at"]
-      freeGames = content["found"]
+      if not claimonfind:
+        freeGames = content["found"]
   else:
     i = 0 # Counter for apps crawled through
-    freeGames = [] # List of free games found for the ASF command
+    if not claimonfind:
+      freeGames = [] # List of free games found for the final ASF command
+
   for id in appIDs: #Loop through all apps
     ratelimit+=1
     i+=1
@@ -58,7 +72,12 @@ while True:
     if "discount_percent" in appInfo:
       s = re.search("discount_percent\":(\d+)",appInfo).group(1)
       if s == "100": #If there is a 100% reduction, keep the game
-        freeGames.append(re.search("packageid\":(\d+)",appInfo).group(1))
+        package = re.search("packageid\":(\d+)",appInfo)
+        if claimonfind:
+          redeem("a/"+",a/".join(package)) #Redeem the game as an app
+          redeem("s/"+",s/".join(package)) #Redeem the game as a sub
+        else:
+          freeGames.append(package).group(1)
         log("Found game "+str(id)+'   ') 
     if re.search("packageid\":(\d+)",appInfo):
       print("Searched through "+str(i)+'/'+str(len(appIDs))+ " titles. Current subID: "+re.search("packageid\":(\d+)",appInfo).group(1)+"    ",end="\r")
@@ -72,14 +91,16 @@ while True:
         with open(configfile, 'r+') as f:
           content = json.loads(f.read())
           content["stopped_at"] = i
-          content["found"] = freeGames
+          if not claimonfind:
+            content["found"] = freeGames
         remove(configfile)
         with open(configfile,"w") as f:
           json.dump(content, f)
       time.sleep(60)
-  redeem("a/"+",a/".join(freeGames)) #Redeem the games as apps
-  redeem("s/"+",s/".join(freeGames)) #Redeem the games as subs
-  del freeGames
+  if not claimonfind:
+    redeem("a/"+",a/".join(freeGames)) #Redeem the games as apps
+    redeem("s/"+",s/".join(freeGames)) #Redeem the games as subs
+    del freeGames
   if saveprogress:
     remove(configfile)
     with open(configfile, "w") as f:
