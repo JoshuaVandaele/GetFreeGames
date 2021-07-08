@@ -20,12 +20,11 @@ def redeem(key):
 
 if saveprogress:
   if not path.exists(configfile):
-    with open(configfile, "w") as config:
-      config.write("{\"stopped_at\":0}") #create file so it doesn't entirely start over if it crashes
+    with open(configfile, "w") as f:
+      json.dump({"stopped_at":0, "found": []}, f) #create file so it doesn't entirely start over if it crashes
 
-  f = open(configfile,"r")
-  i = json.loads(f.read())['stopped_at'] #Total game count
-  f.close()
+  with open(configfile,"r") as f:
+    i = json.loads(f.read())['stopped_at'] # Take back where we left
 
 print("Sit back and enjoy while we collect games for you.")
 while True:
@@ -38,10 +37,12 @@ while True:
   del apps
   log("Found all games, now crawling through them to check if any is free..")
 
-  freeGames = [] #List of free games found for the ASF command
-  ratelimit = 0 #Counter for the rate limit
+  freeGames = [] # List of free games found for the ASF command
+  ratelimit = 0 # Counter for the rate limit
+  i = 0 # Counter for apps crawled through
   for id in appIDs: #Loop through all apps
     ratelimit+=1
+    i+=1
     appInfo=requests.get("https://store.steampowered.com/api/appdetails?appids="+str(id),headers=headers) #Get info about the current game from steamAPI
     if appInfo.status_code != 200: #If the server doesn't answer with OK, assume we're being rate limited and wait a minute before requesting again
       log("We're being rate limited! Waiting 60 seconds..")
@@ -67,7 +68,6 @@ while True:
           content = json.loads(f.read())
           content["stopped_at"] = i
           content["found"] = freeGames
-          f.seek(0)
         remove(configfile)
         with open(configfile,"w") as f:
           json.dump(content, f)
@@ -78,4 +78,4 @@ while True:
   if saveprogress:
     remove(configfile)
     with open(configfile, "w") as f:
-      f.write("{\"stopped_at\":0}")
+      json.dump({"stopped_at":0, "found": []}, f)
