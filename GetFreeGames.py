@@ -72,12 +72,12 @@ while True:
     if "discount_percent" in appInfo:
       s = re.search("discount_percent\":(\d+)",appInfo).group(1)
       if s == "100": #If there is a 100% reduction, keep the game
-        package = re.search("packageid\":(\d+)",appInfo)
+        package = re.search("packageid\":(\d+)",appInfo).group(1)
         if claimonfind:
           redeem("a/"+",a/".join(package)) #Redeem the game as an app
           redeem("s/"+",s/".join(package)) #Redeem the game as a sub
         else:
-          freeGames.append(package).group(1)
+          freeGames.append(package)
         log("Found game "+str(id)+'   ') 
     if re.search("packageid\":(\d+)",appInfo):
       print("Searched through "+str(i)+'/'+str(len(appIDs))+ " titles. Current subID: "+re.search("packageid\":(\d+)",appInfo).group(1)+"    ",end="\r")
