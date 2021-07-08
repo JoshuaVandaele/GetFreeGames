@@ -7,7 +7,9 @@ import json
 from os import path
 from os import remove
 
+IPC = "127.0.0.1:1242" #IP of your IPC (default: 127.0.0.1:1242)
 saveprogress=True
+
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
 configfile = "progress.json"
 
@@ -15,7 +17,7 @@ def log(x):
   print('[' + str(datetime.now()) + "] - "+x)
 
 def redeem(key):
-  r = requests.post("http://127.0.0.1:1242/Api/Command" , json=({"Command":"addlicense ASF "+str(key)})) #Send the games to ASF
+  r = requests.post("http://"+IPC+"/Api/Command" , json=({"Command":"addlicense ASF "+str(key)})) #Send the games to ASF
   log(json.loads(r.text)["Result"])
 
 if saveprogress: #If the file doesn't exist yet, create it
