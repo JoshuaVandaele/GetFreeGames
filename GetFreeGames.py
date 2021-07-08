@@ -18,13 +18,10 @@ def redeem(key):
   r = requests.post("http://127.0.0.1:1242/Api/Command" , json=({"Command":"addlicense ASF "+str(key)})) #Send the games to ASF
   log(json.loads(r.text)["Result"])
 
-if saveprogress:
+if saveprogress: #If the file doesn't exist yet, create it
   if not path.exists(configfile):
     with open(configfile, "w") as f:
-      json.dump({"stopped_at":0, "found": []}, f) #create file so it doesn't entirely start over if it crashes
-
-  with open(configfile,"r") as f:
-    i = json.loads(f.read())['stopped_at'] # Take back where we left
+      json.dump({"stopped_at":0, "found": []}, f) #create save file
 
 print("Sit back and enjoy while we collect games for you.")
 while True:
@@ -37,9 +34,15 @@ while True:
   del apps
   log("Found all games, now crawling through them to check if any is free..")
 
-  freeGames = [] # List of free games found for the ASF command
   ratelimit = 0 # Counter for the rate limit
-  i = 0 # Counter for apps crawled through
+  if saveprogress:
+    with open(configfile,"r") as f: #Take back where we left
+      content = json.loads(f.read())
+      i = content["stopped_at"]
+      freeGames = content["found"]
+  else:
+    i = 0 # Counter for apps crawled through
+    freeGames = [] # List of free games found for the ASF command
   for id in appIDs: #Loop through all apps
     ratelimit+=1
     i+=1
