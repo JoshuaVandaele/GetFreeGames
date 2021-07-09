@@ -26,6 +26,25 @@ def redeem(key):
   r = requests.post("http://"+IPC+"/Api/Command" , json=({"Command":"addlicense ASF "+str(key)})) #Send the games to ASF
   log(json.loads(r.text)["Result"])
 
+def display_time(seconds): #Stole from https://stackoverflow.com/a/24542445
+  intervals = (
+    ('w', 604800),  # 60 * 60 * 24 * 7
+    ('d', 86400),    # 60 * 60 * 24
+    ('h', 3600),    # 60 * 60
+    ('m', 60),
+    ('s', 1),
+  )
+
+  result = []
+  for name, count in intervals:
+    value = seconds // count
+    if value:
+        seconds -= value * count
+        if value == 1:
+            name = name.rstrip('s')
+        result.append("{}{}".format(value, name))
+  return ', '.join(result)
+
 ###### START UP ######
 
 if saveprogress: #If the file doesn't exist yet, create it
@@ -62,9 +81,11 @@ while True:
   for id in appIDs: #Loop through all apps
     ratelimit+=1
     i+=1
+    progress = str(i)+"/"+str(len(appIDs)) #done/total
+    ETA = display_time(((len(appIDs)-i)/20)*60) # ( ( total apps to go through - apps went through ) / ratelimit ) * 60
     appInfo=requests.get("https://store.steampowered.com/api/appdetails?appids="+str(id),headers=headers) #Get info about the current game from steamAPI
     if appInfo.status_code != 200: #If the server doesn't answer with OK, assume we're being rate limited and wait a minute before requesting again
-      log("We're being rate limited! Waiting 60 seconds..")
+      log("We're being rate limited! Waiting 60 seconds.. ("+progress+", ETA: "+ETA+" left)")
       ratelimit = 0
       time.sleep(60)
       appInfo=requests.get("https://store.steampowered.com/api/appdetails?appids="+str(id),headers=headers)
@@ -80,11 +101,11 @@ while True:
           freeGames.append(package)
         log("Found game "+str(id)+'   ') 
     if re.search("packageid\":(\d+)",appInfo):
-      print("Searched through "+str(i)+'/'+str(len(appIDs))+ " titles. Current subID: "+re.search("packageid\":(\d+)",appInfo).group(1)+"    ",end="\r")
+      print("Searched through "+progress+" titles. Current subID: "+re.search("packageid\":(\d+)",appInfo).group(1)+" ETA:"+ETA+" left.",end="              \r")
     else:
-      print("Searched through "+str(i)+'/'+str(len(appIDs))+ " titles.",end="\r")
+      print("Searched through "+progress+ " titles. Current subID: INVALID ETA:"+ETA+" left.",end="              \r")
     if ratelimit == 20:
-      print("Sleeping 60 seconds to avoid being rate limited! ("+str(i)+"/"+str(len(appIDs))+")   ",end="\r")
+      print("Sleeping 60 seconds to avoid being rate limited! ("+progress+", ETA:"+ETA+" left.)",end="              \r")
       ratelimit = 0
       if saveprogress:
         content = ""
