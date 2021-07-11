@@ -23,7 +23,9 @@ def log(x):
   print('[' + str(datetime.now()) + "] - "+x)
 
 def redeem(key):
-  r = requests.post("http://"+IPC+"/Api/Command" , json=({"Command":"addlicense ASF "+str(key)})) #Send the games to ASF
+  cmd = "addlicense ASF "+str(key)
+  print("Running: "+key)
+  r = requests.post("http://"+IPC+"/Api/Command" , json=({"Command":cmd})) #Send the games to ASF
   log(json.loads(r.text)["Result"])
 
 def display_time(seconds): #Stole from https://stackoverflow.com/a/24542445
@@ -95,8 +97,8 @@ while True:
       if s == "100": #If there is a 100% reduction, keep the game
         package = re.search("packageid\":(\d+)",appInfo).group(1)
         if claimonfind:
-          redeem("a/"+",a/".join(package)) #Redeem the game as an app
-          redeem("s/"+",s/".join(package)) #Redeem the game as a sub
+          redeem("a/"+package) #Redeem the game as an app
+          redeem("s/"+package) #Redeem the game as a sub
         else:
           freeGames.append(package)
         log("Found game "+str(id)+'   ') 
