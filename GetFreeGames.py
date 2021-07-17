@@ -24,7 +24,7 @@ def log(x):
 
 def redeem(key):
   cmd = "addlicense ASF "+str(key)
-  print("Running: "+key)
+  log("Running: "+key)
   r = requests.post("http://"+IPC+"/Api/Command" , json=({"Command":cmd})) #Send the games to ASF
   log(json.loads(r.text)["Result"])
 
@@ -69,16 +69,13 @@ while True:
   log("Found all games, now crawling through them to check if any is free..")
 
   ratelimit = 0 # Counter for the rate limit
+  i = 0
   if saveprogress:
     with open(configfile,"r") as f: #Take back where we left
       content = json.loads(f.read())
       i = content["stopped_at"]
       if not claimonfind:
         freeGames = content["found"]
-  else:
-    i = 0 # Counter for apps crawled through
-    if not claimonfind:
-      freeGames = [] # List of free games found for the final ASF command
 
   for id in appIDs: #Loop through all apps
     ratelimit+=1
