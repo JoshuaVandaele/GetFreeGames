@@ -79,18 +79,17 @@ while True:
 
   if i >= len(appIDs):
     i = 0
-
-  for id in appIDs: #Loop through all apps
+  for i in range(i,len(appIDs)): #Loop through all app IDs
     ratelimit+=1
     i+=1
     progress = str(i)+"/"+str(len(appIDs)) #done/total
     ETA = display_time(((len(appIDs)-i)/20)*60) # ( ( total apps to go through - apps went through ) / ratelimit ) * 60
-    appInfo=requests.get("https://store.steampowered.com/api/appdetails?appids="+str(id),headers=headers) #Get info about the current game from steamAPI
+    appInfo=requests.get("https://store.steampowered.com/api/appdetails?appids="+str(appIDs[i]),headers=headers) #Get info about the current game from steamAPI
     if appInfo.status_code != 200: #If the server doesn't answer with OK, assume we're being rate limited and wait a minute before requesting again
       log("We're being rate limited! Waiting 60 seconds.. ("+progress+", ETA: "+ETA+" left)")
       ratelimit = 0
       time.sleep(60)
-      appInfo=requests.get("https://store.steampowered.com/api/appdetails?appids="+str(id),headers=headers)
+      appInfo=requests.get("https://store.steampowered.com/api/appdetails?appids="+str(appIDs[i]),headers=headers)
     appInfo = appInfo.text
     if "discount_percent" in appInfo:
       s = re.search("discount_percent\":(\d+)",appInfo).group(1)
@@ -101,7 +100,7 @@ while True:
           redeem("s/"+package) #Redeem the game as a sub
         else:
           freeGames.append(package)
-        log("Found game "+str(id)+'   ') 
+        log("Found game "+str(appIDs[i])+'   ') 
     if re.search("packageid\":(\d+)",appInfo):
       print("Searched through "+progress+" titles. Current subID: "+re.search("packageid\":(\d+)",appInfo).group(1)+" ETA:"+ETA+" left.",end="              \r")
     else:
