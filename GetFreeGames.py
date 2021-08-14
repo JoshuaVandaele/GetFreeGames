@@ -77,6 +77,9 @@ while True:
       if not claimonfind:
         freeGames = content["found"]
 
+  if i >= len(appIDs):
+    i = 0
+
   for id in appIDs: #Loop through all apps
     ratelimit+=1
     i+=1
