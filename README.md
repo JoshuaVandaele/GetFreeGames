@@ -1,3 +1,5 @@
+# Archived
+I don't have the ressources to keep this up to date, I recommend you check out https://github.com/Luois45/claim-free-steam-packages if you want to claim free games as they appear, or https://github.com/Luois45/claim-free-steam-packages if you want to claim ALL of Steam's games!
 
 # GetFreeGames
 This script requires "ArchiSteamFarm", and the pip package `requests`  
